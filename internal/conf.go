@@ -106,19 +106,19 @@ func ParseConf() (*Conf, error) {
 	}
 	conf.OSStats = nil
 	conf.Scripts = nil
-/**
-	if err := validateOSStatsConf(conf.OSStats, meta); err != nil {
-		return nil, err
-	}
-	if !meta.IsDefined("os_stats", "check_interval_ms") {
-		conf.OSStats.CheckIntervalMS = conf.FlushIntervalMS
-	}
-	if err := validateScriptsConf(conf.Scripts, meta); err != nil {
-		return nil, err
-	}
-**/
+	/**
+		if err := validateOSStatsConf(conf.OSStats, meta); err != nil {
+			return nil, err
+		}
+		if !meta.IsDefined("os_stats", "check_interval_ms") {
+			conf.OSStats.CheckIntervalMS = conf.FlushIntervalMS
+		}
+		if err := validateScriptsConf(conf.Scripts, meta); err != nil {
+			return nil, err
+		}
+	**/
 	if conf.Namespace == "" {
-		conf.Namespace = "gost.default"
+		conf.Namespace = "default"
 	}
 	conf.ForwardedNamespace, err = filterNamespace(conf.ForwardedNamespace)
 	if err != nil {

@@ -21,7 +21,7 @@ flush_interval_ms = 10000
 # Dot-separated namespace for metrics. %H will be replaced with the machine's hostname. For instance, if
 # namespace is example.%H and the hostname is web-25, then a counter called web.requests would be sent to
 # graphite with the name "example.web-25.counters.web.requests".
-namespace = "gost.default"
+namespace = "default"
 
 # Whether to send back some counters about the stats that gost has seen (for instance, the number of bad
 # messages and the number of packets received).

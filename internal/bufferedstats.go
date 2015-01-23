@@ -160,11 +160,11 @@ func (c *BufferedStats) CreateGraphiteMessage(namespace, countGaugeName string,
 	for typ, s := range metrics {
 		for key, value := range s {
 			n++
-			fmt.Fprintf(buf, "%s.%s.%s %f %d\n", namespace, key, typ, value, ts)
+			fmt.Fprintf(buf, "gost.%s.%s.%s %f %d\n", namespace, key, typ, value, ts)
 		}
 	}
 	n++
-	fmt.Fprintf(buf, "%s.gost.%s.gauge %f %d\n", namespace, countGaugeName, float64(n), ts)
+	fmt.Fprintf(buf, "gost.%s.gost.%s.gauge %f %d\n", namespace, countGaugeName, float64(n), ts)
 	return n, buf.Bytes()
 }
 
