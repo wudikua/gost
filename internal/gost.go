@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"service"
-	"internal/llog"
+	"gost/internal/llog"
+	"gost/service"
 )
 
 const (
@@ -148,7 +148,7 @@ func (s *Server) Listen(clientConn *net.UDPConn, forwardListener, debugListener 
 	}
 
 	if clientConn == nil {
-		ip, err := service.GetLocalIp();
+		ip, err := service.GetLocalIp()
 		if err != nil {
 			return err
 		}
@@ -498,5 +498,3 @@ func (l tcpKeepAliveListener) Accept() (net.Conn, error) {
 	}
 	return c, nil
 }
-
-
