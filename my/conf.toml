@@ -1,0 +1,44 @@
+# Graphite backend address
+graphite_addr = "10.83.68.138:2003"
+
+# Port to listen (on localhost) for statsd messages from clients over UDP
+port = 18000
+
+# Port to listen (on localhost) for people to connect (using, e.g., telnet) for debugging output.
+debug_port = 18001
+
+# Print some verbose debugging information
+debug_logging = true
+
+# This option controls whether gost clears out stats after it flushes. If true, gost won't remember what stats
+# it has seen; if false, it will set counts to 0 (and leave gauges at the previous value) but keep sending the
+# zeroed-out values.
+clear_stats_between_flushes = true
+
+# Interval to flush to graphite in milliseconds
+flush_interval_ms = 10000
+
+# Dot-separated namespace for metrics. %H will be replaced with the machine's hostname. For instance, if
+# namespace is example.%H and the hostname is web-25, then a counter called web.requests would be sent to
+# graphite with the name "example.web-25.counters.web.requests".
+namespace = "gost.default"
+
+# Whether to send back some counters about the stats that gost has seen (for instance, the number of bad
+# messages and the number of packets received).
+meta_stats = true
+
+# The os_stats.net controls which network stats are reported.
+# [os_stats.net]
+# If tcp is set, report TCP connection stats:
+# net.tcp.{active,passive}_opens: the number of {outgoing, incoming} TCP connections established
+# net.tcp.current_connections: a gauge for the current TCP connections
+# tcp = false
+# If udp is set, report UDP packet stats:
+# net.udp.{in,out}_datagrams: Counters for incoming/outgoing UDP packets
+# udp = false
+# Devices is a list of network interfaces to report per-device stats:
+# net.devices.eth0.{receive,transmit}_bytes: Bytes received/transmitted
+# net.devices.eth0.{receive,transmit}_packets: Packets received/transmitted
+# net.devices.eth0.{receive,transmit}_errors: Receive/transmit errors
+# devices = ["bond0", "em1", "em2", "lo"]
+
