@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/gob"
 	"flag"
@@ -96,7 +97,6 @@ func NewServer(conf *Conf, out io.Writer) *Server {
 	for i := 0; i < nUDPBufs; i++ {
 		s.bufPool <- make([]byte, udpBufSize)
 	}
-
 	s.aggregateFlushTicker = func() <-chan time.Time {
 		return time.NewTicker(time.Duration(s.conf.FlushIntervalMS) * time.Millisecond).C
 	}
@@ -252,6 +252,25 @@ func (s *Server) clientServer(c *net.UDPConn) error {
 			continue
 		}
 		go s.handleMessages(buf[:n])
+	}
+}
+
+func (s *dServer) tcpClientServer(c *net.TCPConn) error {
+	for {
+		r := bufio.NewReader(c)
+		msg, err := r.ReadString('\n')
+		if err != nil {
+			return err
+		}
+		if n >= tcpBufSize {
+			s.metaInc("errors.udp_message_too_large")
+			continue
+		}
+		go func() {
+			for _, msg := range bytes.Split(buf, []byte{'\n'}) {
+				s.handleMessage(msg)
+			}
+		}()
 	}
 }
 
@@ -419,9 +438,13 @@ type dServer struct {
 // If listener is non-nil, then it's used; otherwise listen on TCP using the given port.
 func (s *dServer) Start(port int, listener net.Listener) error {
 	if listener == nil {
-		addr := fmt.Sprintf("127.0.0.1:%d", port)
-		s.l.Println("Listening for debug TCP clients on", addr)
 		var err error
+		ip, err = service.GetLocalIp()
+		if err != nil {
+			return err
+		}
+		addr := fmt.Sprintf("%s:%d", ip, port)
+		s.l.Println("Listening for debug TCP clients on", addr)
 		listener, err = net.Listen("tcp", addr)
 		if err != nil {
 			return err
@@ -433,27 +456,23 @@ func (s *dServer) Start(port int, listener net.Listener) error {
 			if err != nil {
 				continue
 			}
-			s.Lock()
-			s.Clients = append(s.Clients, c)
-			s.l.Debugf("Debug client connected. Currently %d connected client(s).", len(s.Clients))
-			s.Unlock()
+			c.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
+			c.SetKeepAlive(true)
+			c.SetKeepAlivePeriod(tcpKeepAlivePeriod)
+			c.SetNoDelay(true)
+			go s.tcpClientServer(c)
 		}
 	}()
 	return nil
 }
 
 func (s *dServer) closeClient(client net.Conn) {
-	for i, c := range s.Clients {
-		if c == client {
-			s.Clients = append(s.Clients[:i], s.Clients[i+1:]...)
-			client.Close()
-			s.l.Debugf("Debug client disconnected. Currently %d connected client(s).", len(s.Clients))
-			return
-		}
-	}
+	client.Close()
+	s.l.Println("Tcp client:%s disconnected.", client.RemoteAddr())
 }
 
 func (s *dServer) Print(tag string, msg []byte) {
+	return
 	s.Lock()
 	defer s.Unlock()
 	if len(s.Clients) == 0 {
