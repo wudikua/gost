@@ -419,7 +419,7 @@ func (s *Server) flush() {
 }
 
 // If listener is non-nil, then it's used; otherwise listen on TCP using the given port.
-func (s *Server) Start(port int, listener *ListenTCP) error {
+func (s *Server) Start(port int, listener *net.TCPListener) error {
 	if listener == nil {
 		var err error
 		ip, err := service.GetLocalIp()
