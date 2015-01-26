@@ -262,10 +262,7 @@ func (s *dServer) tcpClientServer(c *net.TCPConn) error {
 		if err != nil {
 			return err
 		}
-		if n >= tcpBufSize {
-			s.metaInc("errors.udp_message_too_large")
-			continue
-		}
+		
 		go func() {
 			for _, msg := range bytes.Split(buf, []byte{'\n'}) {
 				s.handleMessage(msg)
