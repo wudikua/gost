@@ -419,7 +419,7 @@ func (s *Server) flush() {
 }
 
 // If listener is non-nil, then it's used; otherwise listen on TCP using the given port.
-func (s *Server) Start(port int, listener net.Listener) error {
+func (s *Server) Start(port int, listener *ListenTCP) error {
 	if listener == nil {
 		var err error
 		ip, err := service.GetLocalIp()
@@ -427,10 +427,10 @@ func (s *Server) Start(port int, listener net.Listener) error {
 			return err
 		}
 		addr := fmt.Sprintf("%s:%d", ip, port)
-		tcpAddr,err := net.ResolveTCPAddr("tcp4", addr)
-		if err != nil{
-        		return err
-    		}
+		tcpAddr, err := net.ResolveTCPAddr("tcp4", addr)
+		if err != nil {
+			return err
+		}
 		s.l.Println("Listening for debug TCP clients on", addr)
 		listener, err = net.ListenTCP("tcp", tcpAddr)
 		if err != nil {
@@ -439,7 +439,7 @@ func (s *Server) Start(port int, listener net.Listener) error {
 	}
 	go func() {
 		for {
-			c, err := listener.Accept()
+			c, err := listener.AcceptTCP()
 			if err != nil {
 				continue
 			}
