@@ -259,7 +259,7 @@ func (s *Server) tcpClientServer(c *net.TCPConn) error {
 		}
 
 		go func() {
-			for _, msg := range bytes.Split(msgs, []byte{'\n'}) {
+			for _, msg := range bytes.Split([]byte(msgs), []byte{'\n'}) {
 				s.handleMessage(msg)
 			}
 		}()
@@ -419,7 +419,7 @@ func (s *Server) flush() {
 }
 
 // If listener is non-nil, then it's used; otherwise listen on TCP using the given port.
-func (s *Server) Start(port int, listener net.listener) error {
+func (s *Server) Start(port int, listener net.Listener) error {
 	if listener == nil {
 		var err error
 		ip, err := service.GetLocalIp()
@@ -427,8 +427,12 @@ func (s *Server) Start(port int, listener net.listener) error {
 			return err
 		}
 		addr := fmt.Sprintf("%s:%d", ip, port)
+		tcpAddr,err := net.ResolveTCPAddr("tcp4", addr)
+		if err != nil{
+        		return err
+    		}
 		s.l.Println("Listening for debug TCP clients on", addr)
-		listener, err = net.ListenTCP("tcp", addr)
+		listener, err = net.ListenTCP("tcp", tcpAddr)
 		if err != nil {
 			return err
 		}
