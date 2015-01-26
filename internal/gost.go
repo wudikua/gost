@@ -106,7 +106,7 @@ func NewServer(conf *Conf, out io.Writer) *Server {
 // If the listener params are nil, these are constructed from the parameters in the conf. Otherwise they are
 // used as-is. This makes it possible for the tests to construct listeners on an available port and pass them
 // in.
-func (s *Server) Listen(clientConn *net.UDPConn, forwardListener, debugListener net.Listener) error {
+func (s *Server) Listen(clientConn *net.UDPConn, forwardListener net.Listener, debugListener *net.TCPListener) error {
 	go s.handleMetaStats()
 	go s.flush()
 	go s.aggregate()
@@ -357,7 +357,6 @@ func (s *Server) flushForwarding() {
 	for {
 		select {
 		case msg := <-s.forwardingOutgoing:
-			debugMsg := fmt.Sprintf("<binary forwarding message; len = %d bytes>", len(msg))
 			start := time.Now()
 			if _, err := conn.Write(msg); err != nil {
 				s.metaInc("errors.forwarding_write")

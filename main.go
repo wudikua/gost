@@ -24,7 +24,7 @@ func main() {
 	// 注册到LOOKUP服务
 	service.RegisterMoaService(&service.MoaServiceRegReq{
 		ServiceUri: fmt.Sprintf("/service/prism/%s", conf.Namespace),
-		HostPort:   fmt.Sprintf("%s:%d", localIp, conf.Port),
+		HostPort:   fmt.Sprintf("%s:%d", localIp, conf.DebugPort),
 		// redis是udp memcache是tcp
 		Protocol: "redis",
 	})
