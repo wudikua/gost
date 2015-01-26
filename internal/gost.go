@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"net"
-	"sync"
 	"time"
 
 	"gost/internal/llog"
@@ -251,16 +250,16 @@ func (s *Server) clientServer(c *net.UDPConn) error {
 	}
 }
 
-func (s *dServer) tcpClientServer(c *net.TCPConn) error {
+func (s *Server) tcpClientServer(c *net.TCPConn) error {
 	for {
 		r := bufio.NewReader(c)
-		msg, err := r.ReadString('\n')
+		msgs, err := r.ReadString('\n')
 		if err != nil {
 			return err
 		}
 
 		go func() {
-			for _, msg := range bytes.Split(buf, []byte{'\n'}) {
+			for _, msg := range bytes.Split(msgs, []byte{'\n'}) {
 				s.handleMessage(msg)
 			}
 		}()
@@ -420,16 +419,16 @@ func (s *Server) flush() {
 }
 
 // If listener is non-nil, then it's used; otherwise listen on TCP using the given port.
-func (s *Server) Start(port int, listener net.Listener) error {
+func (s *Server) Start(port int, listener net.listener) error {
 	if listener == nil {
 		var err error
-		ip, err = service.GetLocalIp()
+		ip, err := service.GetLocalIp()
 		if err != nil {
 			return err
 		}
 		addr := fmt.Sprintf("%s:%d", ip, port)
 		s.l.Println("Listening for debug TCP clients on", addr)
-		listener, err = net.Listen("tcp", addr)
+		listener, err = net.ListenTCP("tcp", addr)
 		if err != nil {
 			return err
 		}
