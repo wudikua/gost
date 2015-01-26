@@ -55,8 +55,6 @@ type Server struct {
 	forwarderIncoming chan *BufferedStats // incoming forwarded messages
 	forwardedStats    *BufferedStats
 
-	debugServer *dServer
-
 	// The flushTickers and now are functions that the tests can stub out.
 	aggregateFlushTicker           func() <-chan time.Time
 	aggregateForwardedFlushTicker  func() <-chan time.Time
@@ -89,7 +87,6 @@ func NewServer(conf *Conf, out io.Writer) *Server {
 		forwardingOutgoing: make(chan []byte),
 		forwarderIncoming:  make(chan *BufferedStats, incomingQueueSize),
 		forwardedStats:     NewBufferedStats(conf.FlushIntervalMS),
-		debugServer:        &dServer{l: logger},
 		now:                time.Now,
 	}
 	s.InitOSData()
@@ -143,7 +140,7 @@ func (s *Server) Listen(clientConn *net.UDPConn, forwardListener, debugListener 
 		}()
 	}
 
-	if err := s.debugServer.Start(s.conf.DebugPort, debugListener); err != nil {
+	if err := s.Start(s.conf.DebugPort, debugListener); err != nil {
 		return err
 	}
 
@@ -221,7 +218,6 @@ func (s *Server) handleMessage(msg []byte) {
 	if len(msg) == 0 {
 		return
 	}
-	s.debugServer.Print("[in] ", msg)
 	stat, ok := parseStatsdMessage(msg, s.conf.forwardingEnabled)
 	if !ok {
 		s.l.Println("bad message:", string(msg))
@@ -262,7 +258,7 @@ func (s *dServer) tcpClientServer(c *net.TCPConn) error {
 		if err != nil {
 			return err
 		}
-		
+
 		go func() {
 			for _, msg := range bytes.Split(buf, []byte{'\n'}) {
 				s.handleMessage(msg)
@@ -363,7 +359,6 @@ func (s *Server) flushForwarding() {
 		select {
 		case msg := <-s.forwardingOutgoing:
 			debugMsg := fmt.Sprintf("<binary forwarding message; len = %d bytes>", len(msg))
-			s.debugServer.Print("[forward]", []byte(debugMsg))
 			start := time.Now()
 			if _, err := conn.Write(msg); err != nil {
 				s.metaInc("errors.forwarding_write")
@@ -412,7 +407,6 @@ func (s *Server) flush() {
 	for {
 		select {
 		case msg := <-s.outgoing:
-			s.debugServer.Print("[out] ", msg)
 			start := time.Now()
 			if _, err := conn.Write(msg); err != nil {
 				s.metaInc("errors.graphite_write")
@@ -425,15 +419,8 @@ func (s *Server) flush() {
 	}
 }
 
-// dServer listens on a local tcp port and prints out debugging info to clients that connect.
-type dServer struct {
-	l *llog.Logger
-	sync.Mutex
-	Clients []net.Conn
-}
-
 // If listener is non-nil, then it's used; otherwise listen on TCP using the given port.
-func (s *dServer) Start(port int, listener net.Listener) error {
+func (s *Server) Start(port int, listener net.Listener) error {
 	if listener == nil {
 		var err error
 		ip, err = service.GetLocalIp()
@@ -463,38 +450,9 @@ func (s *dServer) Start(port int, listener net.Listener) error {
 	return nil
 }
 
-func (s *dServer) closeClient(client net.Conn) {
+func (s *Server) closeClient(client net.Conn) {
 	client.Close()
 	s.l.Println("Tcp client:%s disconnected.", client.RemoteAddr())
-}
-
-func (s *dServer) Print(tag string, msg []byte) {
-	return
-	s.Lock()
-	defer s.Unlock()
-	if len(s.Clients) == 0 {
-		return
-	}
-
-	closed := []net.Conn{}
-	for _, line := range bytes.Split(msg, []byte{'\n'}) {
-		if len(line) == 0 {
-			continue
-		}
-		msg := append([]byte(tag), line...)
-		msg = append(msg, '\n')
-		for _, c := range s.Clients {
-			// Set an aggressive write timeout so a slow debug client can't impact performance.
-			c.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
-			if _, err := c.Write(msg); err != nil {
-				closed = append(closed, c)
-				continue
-			}
-		}
-		for _, c := range closed {
-			s.closeClient(c)
-		}
-	}
 }
 
 type tcpKeepAliveListener struct {
