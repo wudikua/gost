@@ -77,10 +77,10 @@ func (c *BufferedStats) computeDerived() map[string]map[string]float64 {
 	}
 
 	// Compute the per-second rate for each counter
-	rateFactor := float64(c.FlushIntervalMS) / 1000
-	for key, value := range c.Counts {
-		result["rate"][key] = value / rateFactor
-	}
+	//rateFactor := float64(c.FlushIntervalMS) / 1000
+	//for key, value := range c.Counts {
+	//	result["rate"][key] = value / rateFactor
+	//}
 
 	// Get the size of each set
 	for key, value := range c.Sets {

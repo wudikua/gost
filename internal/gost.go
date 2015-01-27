@@ -251,8 +251,8 @@ func (s *Server) clientServer(c *net.UDPConn) error {
 }
 
 func (s *Server) tcpClientServer(c *net.TCPConn) error {
+	r := bufio.NewReader(c)
 	for {
-		r := bufio.NewReader(c)
 		msgs, err := r.ReadString('\n')
 		if err != nil {
 			return err
