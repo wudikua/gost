@@ -1,5 +1,5 @@
 # Graphite backend address
-graphite_addr = "10.83.68.138:2003"
+graphite_addr = "localhost:2003"
 
 # Port to listen (on localhost) for statsd messages from clients over UDP
 port = 18000
