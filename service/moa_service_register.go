@@ -18,7 +18,7 @@ type MoaServiceRegReq struct {
 	Config     map[string]string `json:"config"`
 }
 
-const MOA_REG_SERVER_URI = "http://moa005.m6:10021/register_service"
+const MOA_REG_SERVER_URI = "http://xx.m6:1000/register_service"
 
 func buildUrl(regReq *MoaServiceRegReq) string {
 	u, err := url.Parse(MOA_REG_SERVER_URI)
